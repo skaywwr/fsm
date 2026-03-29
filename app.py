@@ -5,8 +5,25 @@ from flask import Flask, render_template, request, session
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "football-draft-2026-unique")
 
-# ПОЛНАЯ БАЗА (КОНСТАНТА)
+# ПОЛНАЯ БАЗА (ДОБАВЛЕНЫ FC 7E И LEGENDS XI)
 DEFAULT_CLUBS = {
+    "FC 7E": [
+        {"name": "Aibek", "pos": "GK", "rating": 88}, {"name": "Temirlan", "pos": "LB", "rating": 90},
+        {"name": "Edil", "pos": "CB", "rating": 88}, {"name": "Dastan", "pos": "CB", "rating": 90},
+        {"name": "Adilet", "pos": "CB", "rating": 85}, {"name": "Alishah", "pos": "RB", "rating": 88},
+        {"name": "Aidar", "pos": "CM", "rating": 90}, {"name": "Batyrhan", "pos": "CM", "rating": 88},
+        {"name": "Amir", "pos": "CM", "rating": 91}, {"name": "Baiel", "pos": "LW", "rating": 90},
+        {"name": "Bakai", "pos": "LW", "rating": 88}, {"name": "Timur", "pos": "ST", "rating": 91},
+        {"name": "Emir", "pos": "RW", "rating": 90}, {"name": "Adil", "pos": "RW", "rating": 89}
+    ],
+    "Legends XI": [
+        {"name": "Casillas", "pos": "GK", "rating": 89}, {"name": "Marcelo", "pos": "LB", "rating": 88},
+        {"name": "Puyol", "pos": "CB", "rating": 88}, {"name": "Maldini", "pos": "CB", "rating": 90},
+        {"name": "Alves", "pos": "RB", "rating": 88}, {"name": "Xavi", "pos": "CM", "rating": 89},
+        {"name": "Modric", "pos": "CM", "rating": 89}, {"name": "Zidane", "pos": "CM", "rating": 90},
+        {"name": "Cristiano Ronaldo", "pos": "LW", "rating": 91}, {"name": "Ronaldo", "pos": "ST", "rating": 89},
+        {"name": "Lionel Messi", "pos": "RW", "rating": 91}
+    ],
     "Real Madrid": [{"name": "Courtois", "pos": "GK", "rating": 90}, {"name": "Carvajal", "pos": "RB", "rating": 87}, {"name": "Militao", "pos": "CB", "rating": 87}, {"name": "Rudiger", "pos": "CB", "rating": 88}, {"name": "Mendy", "pos": "LB", "rating": 85}, {"name": "Valverde", "pos": "CM", "rating": 89}, {"name": "Tchouameni", "pos": "CM", "rating": 86}, {"name": "Bellingham", "pos": "CM", "rating": 90}, {"name": "Rodrygo", "pos": "RW", "rating": 87}, {"name": "Mbappe", "pos": "ST", "rating": 92}, {"name": "Vinicius Jr", "pos": "LW", "rating": 91}, {"name": "Modric", "pos": "CM", "rating": 84}],
     "Manchester City": [{"name": "Ederson", "pos": "GK", "rating": 88}, {"name": "Walker", "pos": "RB", "rating": 84}, {"name": "Dias", "pos": "CB", "rating": 89}, {"name": "Stones", "pos": "CB", "rating": 86}, {"name": "Gvardiol", "pos": "LB", "rating": 85}, {"name": "Rodri", "pos": "CM", "rating": 91}, {"name": "Bernardo", "pos": "CM", "rating": 88}, {"name": "De Bruyne", "pos": "CM", "rating": 90}, {"name": "Foden", "pos": "RW", "rating": 90}, {"name": "Haaland", "pos": "ST", "rating": 91}, {"name": "Doku", "pos": "LW", "rating": 83}, {"name": "Gundogan", "pos": "CM", "rating": 87}],
     "Liverpool": [{"name": "Alisson", "pos": "GK", "rating": 89}, {"name": "Trent", "pos": "RB", "rating": 87}, {"name": "Konate", "pos": "CB", "rating": 85}, {"name": "Van Dijk", "pos": "CB", "rating": 89}, {"name": "Robertson", "pos": "LB", "rating": 85}, {"name": "Mac Allister", "pos": "CM", "rating": 87}, {"name": "Szoboszlai", "pos": "CM", "rating": 85}, {"name": "Salah", "pos": "RW", "rating": 90}, {"name": "Jota", "pos": "ST", "rating": 85}, {"name": "Diaz", "pos": "LW", "rating": 86}, {"name": "Nunez", "pos": "ST", "rating": 82}, {"name": "Gakpo", "pos": "LW", "rating": 83}],
@@ -38,9 +55,11 @@ def get_best_11(selected_names, user_clubs):
     for cn in selected_names:
         if cn in DEFAULT_CLUBS: pool.extend(DEFAULT_CLUBS[cn])
         if cn in user_clubs: pool.extend(user_clubs[cn]['players'])
+    
     pool.sort(key=lambda x: x['rating'], reverse=True)
     schema = {'GK': 1, 'CB': 2, 'LB': 1, 'RB': 1, 'CM': 3, 'LW': 1, 'RW': 1, 'ST': 1}
     final_squad = []
+    
     for player in pool:
         pos = player['pos']
         if pos in schema and schema[pos] > 0:
@@ -50,22 +69,14 @@ def get_best_11(selected_names, user_clubs):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # 1. Инициализация сессии
     if 'my_clubs' not in session: session['my_clubs'] = {}
     if 'my_managers' not in session: session['my_managers'] = {}
     
-    # 2. Определяем, какие клубы УЖЕ заняты другими менеджерами
-    occupied_clubs = set()
-    for m in session['my_managers'].values():
-        for c in m['selected_clubs']:
-            occupied_clubs.add(c)
-
     match_result = None
 
     if request.method == 'POST':
         action = request.form.get('action')
 
-        # СОЗДАНИЕ КАСТОМНОГО КЛУБА
         if action == 'add_custom':
             c_name = request.form.get('club_name').strip()
             p_name = request.form.get('p_name').strip()
@@ -77,47 +88,58 @@ def index():
             session['my_clubs'] = temp_clubs
             session.modified = True
 
-        # СОЗДАНИЕ / ОБНОВЛЕНИЕ МЕНЕДЖЕРА
         elif action == 'create':
             m_name = request.form.get('manager_name').strip()
-            new_selected = request.form.getlist('clubs')
-            
-            # Если менеджер уже существует, его старые клубы временно считаются "свободными" для него самого
-            temp_managers = session['my_managers'].copy()
-            
-            team = get_best_11(new_selected, session['my_clubs'])
+            selected_names = request.form.getlist('clubs')
+            team = get_best_11(selected_names, session['my_clubs'])
             if len(team) >= 11:
                 avg = sum(p['rating'] for p in team) / len(team)
-                temp_managers[m_name] = {
+                temp_m = session['my_managers'].copy()
+                temp_m[m_name] = {
                     "name": m_name, 
                     "rating": round(avg, 1), 
                     "team": team,
-                    "selected_clubs": new_selected
+                    "selected_clubs": selected_names
                 }
-                session['my_managers'] = temp_managers
+                session['my_managers'] = temp_m
                 session.modified = True
-                return render_template('index.html', clubs=sorted(list(DEFAULT_CLUBS.keys()) + list(session['my_clubs'].keys())), occupied=new_selected, managers=session['my_managers'], full_database=DEFAULT_CLUBS)
 
-        # МАТЧ
         elif action == 'match':
-            m1_n, m2_n = request.form.get('m1'), request.form.get('m2')
+            m1_n = request.form.get('m1')
+            m2_n = request.form.get('m2')
             mgrs = session['my_managers']
-            if m1_n in mgrs and m2_n in mgrs:
+            if m1_n in mgrs and m2_n in mgrs and m1_n != m2_n:
                 m1, m2 = mgrs[m1_n], mgrs[m2_n]
-                r1, r2 = m1['rating']**2.5, m2['rating']**2.5
+                power = 2.5
+                r1, r2 = m1['rating']**power, m2['rating']**power
                 chance = (r1 / (r1 + r2)) * 100
+                
                 log = []
                 s1, s2 = 0, 0
-                for m in sorted(random.sample(range(1, 91), 5)):
+                minutes = sorted(random.sample(range(1, 91), 5))
+                
+                for minute in minutes:
                     if random.uniform(0, 100) < chance:
-                        if random.random() > 0.6: s1 += 1; log.append(f"{m}' — ⚽ ГОЛ! {m1_n} забивает! Счет {s1}:{s2}")
-                        else: log.append(f"{m}' — {m1_n} атакует, но безрезультатно.")
+                        p_atk = random.choice(m1['team'])
+                        p_def = random.choice(m2['team'])
+                        if random.random() > 0.65:
+                            s1 += 1
+                            log.append(f"{minute}' — ⚽ ГОЛ! {p_atk['name']} забивает за команду {m1_n}! Счет {s1}:{s2}")
+                        else:
+                            log.append(f"{minute}' — {p_atk['name']} атакует, но защита {m2_n} во главе с {p_def['name']} блокирует удар.")
                     else:
-                        if random.random() > 0.6: s2 += 1; log.append(f"{m}' — ⚽ ГОЛ! {m2_n} забивает! Счет {s1}:{s2}")
-                        else: log.append(f"{m}' — {m2_n} пробивает мимо ворот.")
-                match_result = {"score": f"{s1}:{s2}", "log": log, "winner": m1_n if s1>s2 else (m2_n if s2>s1 else "Ничья")}
+                        p_atk = random.choice(m2['team'])
+                        p_def = random.choice(m1['team'])
+                        if random.random() > 0.65:
+                            s2 += 1
+                            log.append(f"{minute}' — ⚽ ГОЛ! {p_atk['name']} точен! Команда {m2_n} выходит вперед! Счет {s1}:{s2}")
+                        else:
+                            log.append(f"{minute}' — Опасный момент! {p_atk['name']} промахивается из выгодной позиции.")
 
-    # Пересчитываем занятые клубы для отображения
+                winner = m1_n if s1 > s2 else (m2_n if s2 > s1 else "Ничья")
+                match_result = {"m1": m1_n, "m2": m2_n, "score": f"{s1}:{s2}", "log": log, "winner": winner, "chance": round(chance, 1)}
+
+    # Рассчитываем занятые клубы
     occupied_clubs = set()
     for m in session['my_managers'].values():
         for c in m['selected_clubs']:
@@ -129,7 +151,7 @@ def index():
 
     return render_template('index.html', 
                            clubs=all_names, 
-                           occupied=occupied_clubs, 
+                           occupied=occupied_clubs,
                            managers=session['my_managers'], 
                            match_result=match_result, 
                            full_database=full_db)
