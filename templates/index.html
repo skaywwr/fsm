@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>FC26 Manager & Battles</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #334155; }
+        h2 { color: #d4af37; text-align: center; margin-top: 0; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; background: #0f172a; color: white; border: 1px solid #334155; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-create { background: #d4af37; color: black; }
+        .btn-match { background: #ef4444; color: white; margin-top: 10px; }
+        .manager-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+        .m-badge { background: #2d3748; padding: 10px; border-radius: 8px; border-left: 4px solid #d4af37; }
+        .result-box { background: #d4af37; color: black; padding: 20px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 1.2em; }
+        .club-list { max-height: 150px; overflow-y: auto; background: #0f172a; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>1. Создать Менеджера</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="create">
+            <input type="text" name="manager_name" placeholder="Никнейм игрока" required>
+            <p>Выберите клубы:</p>
+            <div class="club-list">
+                {% for club in clubs %}
+                    <label><input type="checkbox" name="clubs" value="{{ club }}"> {{ club }}</label><br>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn-create">Сохранить Player-а</button>
+        </form>
+    </div>
+
+    {% if managers %}
+    <div class="card">
+        <h2>Зарегистрированные Менеджеры</h2>
+        <div class="manager-list">
+            {% for m in managers.values() %}
+                <div class="m-badge">
+                    <strong>{{ m.name }}</strong><br>
+                    Рейтинг: {{ m.rating }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Провести Матч</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="match">
+            <select name="manager1" required>
+                <option value="" disabled selected>Выбрать 1-го игрока</option>
+                {% for m in managers.values() %}
+                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
+                {% endfor %}
+            </select>
+            <div style="text-align: center; font-weight: bold;">VS</div>
+            <select name="manager2" required>
+                <option value="" disabled selected>Выбрать 2-го игрока</option>
+                {% for m in managers.values() %}
+                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-match">🔥 Начать симуляцию</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if match_result %}
+    <div class="result-box">
+        Матч: {{ match_result.m1 }} vs {{ match_result.m2 }}<br>
+        Шанс {{ match_result.m1 }}: {{ match_result.chance }}%<br><br>
+        🏆 ПОБЕДИТЕЛЬ: {{ match_result.winner }}
+    </div>
+    {% endif %}
+
+</body>
+</html>
