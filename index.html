@@ -2,80 +2,127 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Manager & Battles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Manager Pro</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #334155; }
-        h2 { color: #d4af37; text-align: center; margin-top: 0; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; background: #0f172a; color: white; border: 1px solid #334155; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-create { background: #d4af37; color: black; }
-        .btn-match { background: #ef4444; color: white; margin-top: 10px; }
-        .manager-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
-        .m-badge { background: #2d3748; padding: 10px; border-radius: 8px; border-left: 4px solid #d4af37; }
-        .result-box { background: #d4af37; color: black; padding: 20px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 1.2em; }
-        .club-list { max-height: 150px; overflow-y: auto; background: #0f172a; padding: 10px; border-radius: 5px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: #2c3e50; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin-top: 0; font-size: 1.2rem; color: #34495e; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* Сетка клубов */
+        .clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .club-item { display: flex; align-items: center; font-size: 0.9rem; }
+        .club-item input { margin-right: 8px; }
+
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-create { background: #3498db; color: white; }
+        .btn-create:hover { background: #2980b9; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-add:hover { background: #219150; }
+        .btn-match { background: #e67e22; color: white; }
+        .btn-match:hover { background: #d35400; }
+
+        .result-box { background: #fff3cd; border: 2px dashed #ffeeba; padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; }
+        .winner { font-size: 1.5rem; color: #d35400; font-weight: bold; }
+        
+        .manager-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .manager-badge { background: #ecf0f1; padding: 8px 15px; border-radius: 20px; border: 1px solid #bdc3c7; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
+<div class="container">
+    <h1>⚽ Football Manager Pro</h1>
+
     <div class="card">
-        <h2>1. Создать Менеджера</h2>
+        <h2>➕ Добавить звезду в общую базу</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="add_player">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" name="new_club_name" placeholder="Название клуба" required>
+                <input type="text" name="p_name" placeholder="Имя игрока" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <select name="p_pos">
+                    <option value="GK">Вратарь (GK)</option>
+                    <option value="CB">Защитник (CB)</option>
+                    <option value="LB">Лев. защ (LB)</option>
+                    <option value="RB">Прав. защ (RB)</option>
+                    <option value="CM">Полузащ (CM)</option>
+                    <option value="LW">Лев. вингер (LW)</option>
+                    <option value="RW">Прав. вингер (RW)</option>
+                    <option value="ST">Нападающий (ST)</option>
+                </select>
+                <input type="number" name="p_rating" value="85" min="1" max="99" title="Рейтинг">
+            </div>
+            <button type="submit" class="btn-add">Добавить игрока для всех</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>📝 Создать своего менеджера (только для тебя)</h2>
         <form method="POST">
             <input type="hidden" name="action" value="create">
-            <input type="text" name="manager_name" placeholder="Никнейм игрока" required>
-            <p>Выберите клубы:</p>
-            <div class="club-list">
+            <input type="text" name="manager_name" placeholder="Твоё имя менеджера" required>
+            <p><small>Выбери клубы, из которых соберется лучший состав:</small></p>
+            <div class="clubs-grid">
                 {% for club in clubs %}
-                    <label><input type="checkbox" name="clubs" value="{{ club }}"> {{ club }}</label><br>
+                <label class="club-item">
+                    <input type="checkbox" name="clubs" value="{{ club }}"> {{ club }}
+                </label>
                 {% endfor %}
             </div>
-            <button type="submit" class="btn-create">Сохранить Player-а</button>
+            <button type="submit" class="btn-create">Собрать мой состав</button>
         </form>
-    </div>
-
-    {% if managers %}
-    <div class="card">
-        <h2>Зарегистрированные Менеджеры</h2>
+        
+        {% if managers %}
         <div class="manager-list">
-            {% for m in managers.values() %}
-                <div class="m-badge">
-                    <strong>{{ m.name }}</strong><br>
-                    Рейтинг: {{ m.rating }}
-                </div>
+            {% for m_name, m_data in managers.items() %}
+            <div class="manager-badge">
+                <strong>{{ m_name }}</strong>: ⭐ {{ m_data.rating }}
+            </div>
             {% endfor %}
         </div>
+        {% endif %}
     </div>
 
+    {% if managers|length >= 2 %}
     <div class="card">
-        <h2>2. Провести Матч</h2>
+        <h2>🔥 Провести матч</h2>
         <form method="POST">
             <input type="hidden" name="action" value="match">
-            <select name="manager1" required>
-                <option value="" disabled selected>Выбрать 1-го игрока</option>
-                {% for m in managers.values() %}
-                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
-                {% endfor %}
-            </select>
-            <div style="text-align: center; font-weight: bold;">VS</div>
-            <select name="manager2" required>
-                <option value="" disabled selected>Выбрать 2-го игрока</option>
-                {% for m in managers.values() %}
-                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn-match">🔥 Начать симуляцию</button>
+            <div style="display: flex; gap: 15px;">
+                <select name="manager1">
+                    {% for m_name in managers %}
+                    <option value="{{ m_name }}">{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+                <span style="align-self: center; font-weight: bold;">VS</span>
+                <select name="manager2">
+                    {% for m_name in managers %}
+                    <option value="{{ m_name }}">{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-match">КТО ПОБЕДИТ?</button>
         </form>
+
+        {% if match_result %}
+        <div class="result-box">
+            <p>{{ match_result.m1 }} против {{ match_result.m2 }}</p>
+            <p>Шанс на победу {{ match_result.m1 }}: <strong>{{ match_result.chance }}%</strong></p>
+            <p>Результат матча:</p>
+            <div class="winner">🏆 ПОБЕДИТЕЛЬ: {{ match_result.winner }} 🏆</div>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 
-    {% if match_result %}
-    <div class="result-box">
-        Матч: {{ match_result.m1 }} vs {{ match_result.m2 }}<br>
-        Шанс {{ match_result.m1 }}: {{ match_result.chance }}%<br><br>
-        🏆 ПОБЕДИТЕЛЬ: {{ match_result.winner }}
-    </div>
-    {% endif %}
+</div>
 
 </body>
 </html>
