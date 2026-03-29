@@ -3,9 +3,9 @@ import random
 from flask import Flask, render_template, request, session
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "full-roster-manager-2026")
+app.secret_key = os.environ.get("SECRET_KEY", "mega-football-database-2026")
 
-# ПОЛНАЯ БАЗА: 24 КЛУБА ПО 11-12 ИГРОКОВ МИНИМУМ
+# ПОЛНАЯ БАЗА: 24 КЛУБА ПО 11-12 ИГРОКОВ В КАЖДОМ
 DEFAULT_CLUBS = {
     "Real Madrid": [
         {"name": "Courtois", "pos": "GK", "rating": 90}, {"name": "Carvajal", "pos": "RB", "rating": 87},
@@ -51,61 +51,61 @@ DEFAULT_CLUBS = {
         {"name": "Neuer", "pos": "GK", "rating": 86}, {"name": "Kimmich", "pos": "RB", "rating": 87},
         {"name": "Upamecano", "pos": "CB", "rating": 82}, {"name": "Kim Min Jae", "pos": "CB", "rating": 83},
         {"name": "Davies", "pos": "LB", "rating": 82}, {"name": "Palhinha", "pos": "CM", "rating": 85},
-        {"name": "Pavlovic", "pos": "CM", "rating": 78}, {"name": "Musiala", "pos": "CM", "rating": 89},
+        {"name": "Laimer", "pos": "CM", "rating": 81}, {"name": "Musiala", "pos": "CM", "rating": 89},
         {"name": "Olise", "pos": "RW", "rating": 83}, {"name": "Kane", "pos": "ST", "rating": 91},
-        {"name": "Sane", "pos": "LW", "rating": 85}, {"name": "Coman", "pos": "LW", "rating": 84}
+        {"name": "Sane", "pos": "LW", "rating": 85}, {"name": "Gnabry", "pos": "LW", "rating": 82}
     ],
     "Inter Milan": [
-        {"name": "Sommer", "pos": "GK", "rating": 87}, {"name": "Darmian", "pos": "RB", "rating": 80},
-        {"name": "Pavard", "pos": "CB", "rating": 84}, {"name": "Bastoni", "pos": "CB", "rating": 87},
-        {"name": "Dimarco", "pos": "LB", "rating": 85}, {"name": "Barella", "pos": "CM", "rating": 88},
-        {"name": "Calhanoglu", "pos": "CM", "rating": 86}, {"name": "Mkhitaryan", "pos": "CM", "rating": 83},
-        {"name": "Dumfries", "pos": "RW", "rating": 82}, {"name": "Lautaro", "pos": "ST", "rating": 90},
-        {"name": "Thuram", "pos": "ST", "rating": 84}, {"name": "Acerbi", "pos": "CB", "rating": 83}
+        {"name": "Sommer", "pos": "GK", "rating": 87}, {"name": "Pavard", "pos": "CB", "rating": 84},
+        {"name": "Acerbi", "pos": "CB", "rating": 83}, {"name": "Bastoni", "pos": "CB", "rating": 87},
+        {"name": "Darmian", "pos": "RB", "rating": 80}, {"name": "Dimarco", "pos": "LB", "rating": 85},
+        {"name": "Barella", "pos": "CM", "rating": 88}, {"name": "Calhanoglu", "pos": "CM", "rating": 86},
+        {"name": "Mkhitaryan", "pos": "CM", "rating": 83}, {"name": "Lautaro", "pos": "ST", "rating": 90},
+        {"name": "Thuram", "pos": "ST", "rating": 84}, {"name": "Dumfries", "pos": "RW", "rating": 82}
+    ],
+    "PSG": [
+        {"name": "Donnarumma", "pos": "GK", "rating": 88}, {"name": "Hakimi", "pos": "RB", "rating": 85},
+        {"name": "Marquinhos", "pos": "CB", "rating": 87}, {"name": "Pacho", "pos": "CB", "rating": 81},
+        {"name": "Mendes", "pos": "LB", "rating": 83}, {"name": "Vitinha", "pos": "CM", "rating": 85},
+        {"name": "Zaire-Emery", "pos": "CM", "rating": 82}, {"name": "Fabian Ruiz", "pos": "CM", "rating": 82},
+        {"name": "Dembele", "pos": "RW", "rating": 86}, {"name": "Barcola", "pos": "LW", "rating": 82},
+        {"name": "Ramos", "pos": "ST", "rating": 81}, {"name": "Hernandez", "pos": "CB", "rating": 83}
     ],
     "Bayer Leverkusen": [
         {"name": "Hradecky", "pos": "GK", "rating": 81}, {"name": "Frimpong", "pos": "RB", "rating": 85},
         {"name": "Tah", "pos": "CB", "rating": 84}, {"name": "Tapsoba", "pos": "CB", "rating": 83},
         {"name": "Grimaldo", "pos": "LB", "rating": 86}, {"name": "Xhaka", "pos": "CM", "rating": 86},
-        {"name": "Andrich", "pos": "CM", "rating": 82}, {"name": "Garcia", "pos": "CM", "rating": 82},
+        {"name": "Andrich", "pos": "CM", "rating": 82}, {"name": "Palacios", "pos": "CM", "rating": 81},
         {"name": "Wirtz", "pos": "CM", "rating": 89}, {"name": "Boniface", "pos": "ST", "rating": 82},
-        {"name": "Terrier", "pos": "LW", "rating": 80}, {"name": "Hincapie", "pos": "CB", "rating": 81}
-    ],
-    "PSG": [
-        {"name": "Donnarumma", "pos": "GK", "rating": 88}, {"name": "Hakimi", "pos": "RB", "rating": 85},
-        {"name": "Marquinhos", "pos": "CB", "rating": 87}, {"name": "Pacho", "pos": "CB", "rating": 81},
-        {"name": "Nuno Mendes", "pos": "LB", "rating": 83}, {"name": "Vitinha", "pos": "CM", "rating": 85},
-        {"name": "Zaire-Emery", "pos": "CM", "rating": 82}, {"name": "Fabian Ruiz", "pos": "CM", "rating": 82},
-        {"name": "Dembele", "pos": "RW", "rating": 86}, {"name": "Ramos", "pos": "ST", "rating": 81},
-        {"name": "Barcola", "pos": "LW", "rating": 82}, {"name": "Hernandez", "pos": "CB", "rating": 83}
+        {"name": "Schick", "pos": "ST", "rating": 80}, {"name": "Hincapie", "pos": "CB", "rating": 81}
     ],
     "Atletico Madrid": [
-        {"name": "Oblak", "pos": "GK", "rating": 87}, {"name": "Llorente", "pos": "RB", "rating": 82},
-        {"name": "Le Normand", "pos": "CB", "rating": 82}, {"name": "Gimenez", "pos": "CB", "rating": 83},
-        {"name": "Lino", "pos": "LB", "rating": 81}, {"name": "De Paul", "pos": "CM", "rating": 84},
-        {"name": "Koke", "pos": "CM", "rating": 82}, {"name": "Gallagher", "pos": "CM", "rating": 83},
-        {"name": "Griezmann", "pos": "ST", "rating": 88}, {"name": "Alvarez", "pos": "ST", "rating": 85},
-        {"name": "Sorloth", "pos": "ST", "rating": 81}, {"name": "Azpilicueta", "pos": "CB", "rating": 80}
+        {"name": "Oblak", "pos": "GK", "rating": 87}, {"name": "Gimenez", "pos": "CB", "rating": 83},
+        {"name": "Le Normand", "pos": "CB", "rating": 82}, {"name": "Azpilicueta", "pos": "CB", "rating": 80},
+        {"name": "Llorente", "pos": "RB", "rating": 82}, {"name": "Lino", "pos": "LB", "rating": 81},
+        {"name": "De Paul", "pos": "CM", "rating": 84}, {"name": "Koke", "pos": "CM", "rating": 82},
+        {"name": "Gallagher", "pos": "CM", "rating": 83}, {"name": "Griezmann", "pos": "ST", "rating": 88},
+        {"name": "Alvarez", "pos": "ST", "rating": 85}, {"name": "Sorloth", "pos": "ST", "rating": 81}
     ],
     "AC Milan": [
         {"name": "Maignan", "pos": "GK", "rating": 87}, {"name": "Emerson", "pos": "RB", "rating": 78},
         {"name": "Tomori", "pos": "CB", "rating": 83}, {"name": "Pavlovic", "pos": "CB", "rating": 79},
         {"name": "Theo", "pos": "LB", "rating": 87}, {"name": "Fofana", "pos": "CM", "rating": 81},
         {"name": "Reijnders", "pos": "CM", "rating": 82}, {"name": "Loftus-Cheek", "pos": "CM", "rating": 80},
-        {"name": "Pulisic", "pos": "RW", "rating": 84}, {"name": "Morata", "pos": "ST", "rating": 83},
-        {"name": "Leao", "pos": "LW", "rating": 87}, {"name": "Chukwueze", "pos": "RW", "rating": 80}
+        {"name": "Pulisic", "pos": "RW", "rating": 84}, {"name": "Leao", "pos": "LW", "rating": 87},
+        {"name": "Morata", "pos": "ST", "rating": 83}, {"name": "Abraham", "pos": "ST", "rating": 77}
     ],
     "Juventus": [
-        {"name": "Di Gregorio", "pos": "GK", "rating": 82}, {"name": "Danilo", "pos": "RB", "rating": 81},
-        {"name": "Bremer", "pos": "CB", "rating": 86}, {"name": "Gatti", "pos": "CB", "rating": 80},
+        {"name": "Di Gregorio", "pos": "GK", "rating": 82}, {"name": "Bremer", "pos": "CB", "rating": 86},
+        {"name": "Gatti", "pos": "CB", "rating": 80}, {"name": "Kalulu", "pos": "CB", "rating": 78},
         {"name": "Cambiaso", "pos": "LB", "rating": 80}, {"name": "Locatelli", "pos": "CM", "rating": 80},
         {"name": "Douglas Luiz", "pos": "CM", "rating": 83}, {"name": "Koopmeiners", "pos": "CM", "rating": 85},
-        {"name": "Nico Gonzalez", "pos": "RW", "rating": 81}, {"name": "Vlahovic", "pos": "ST", "rating": 85},
+        {"name": "Gonzalez", "pos": "RW", "rating": 81}, {"name": "Vlahovic", "pos": "ST", "rating": 85},
         {"name": "Yildiz", "pos": "LW", "rating": 80}, {"name": "Thuram", "pos": "CM", "rating": 79}
     ],
     "Chelsea": [
         {"name": "Sanchez", "pos": "GK", "rating": 78}, {"name": "James", "pos": "RB", "rating": 83},
-        {"name": "Fofana", "pos": "CB", "rating": 79}, {"name": "Colwill", "pos": "CB", "rating": 80},
+        {"name": "Colwill", "pos": "CB", "rating": 80}, {"name": "Fofana", "pos": "CB", "rating": 79},
         {"name": "Cucurella", "pos": "LB", "rating": 81}, {"name": "Caicedo", "pos": "CM", "rating": 83},
         {"name": "Enzo", "pos": "CM", "rating": 84}, {"name": "Palmer", "pos": "CM", "rating": 86},
         {"name": "Madueke", "pos": "RW", "rating": 80}, {"name": "Jackson", "pos": "ST", "rating": 80},
@@ -125,7 +125,7 @@ DEFAULT_CLUBS = {
         {"name": "Bensebaini", "pos": "LB", "rating": 77}, {"name": "Can", "pos": "CM", "rating": 80},
         {"name": "Sabitzer", "pos": "CM", "rating": 82}, {"name": "Brandt", "pos": "CM", "rating": 85},
         {"name": "Malen", "pos": "RW", "rating": 81}, {"name": "Guirassy", "pos": "ST", "rating": 83},
-        {"name": "Adeyemi", "pos": "LW", "rating": 80}, {"name": "Gittens", "pos": "LW", "rating": 78}
+        {"name": "Adeyemi", "pos": "LW", "rating": 80}, {"name": "Beier", "pos": "ST", "rating": 78}
     ],
     "Spurs": [
         {"name": "Vicario", "pos": "GK", "rating": 83}, {"name": "Porro", "pos": "RB", "rating": 82},
@@ -176,8 +176,8 @@ DEFAULT_CLUBS = {
         {"name": "Akturkoglu", "pos": "LW", "rating": 80}, {"name": "Barreiro", "pos": "CM", "rating": 78}
     ],
     "Porto": [
-        {"name": "Diogo Costa", "pos": "GK", "rating": 84}, {"name": "Joao Mario", "pos": "RB", "rating": 78},
-        {"name": "Otavio", "pos": "CB", "rating": 77}, {"name": "Nehuen Perez", "pos": "CB", "rating": 77},
+        {"name": "Costa", "pos": "GK", "rating": 84}, {"name": "Joao Mario", "pos": "RB", "rating": 78},
+        {"name": "Otavio", "pos": "CB", "rating": 77}, {"name": "Perez", "pos": "CB", "rating": 77},
         {"name": "Moura", "pos": "LB", "rating": 76}, {"name": "Varela", "pos": "CM", "rating": 80},
         {"name": "Eustaquio", "pos": "CM", "rating": 77}, {"name": "Nico", "pos": "CM", "rating": 78},
         {"name": "Pepe", "pos": "RW", "rating": 80}, {"name": "Omorodion", "pos": "ST", "rating": 78},
@@ -193,9 +193,9 @@ DEFAULT_CLUBS = {
     ],
     "Girona": [
         {"name": "Gazzaniga", "pos": "GK", "rating": 79}, {"name": "Arnau", "pos": "RB", "rating": 76},
-        {"name": "David Lopez", "pos": "CB", "rating": 79}, {"name": "Blind", "pos": "CB", "rating": 80},
+        {"name": "Lopez", "pos": "CB", "rating": 79}, {"name": "Blind", "pos": "CB", "rating": 80},
         {"name": "Miguel", "pos": "LB", "rating": 81}, {"name": "Romeu", "pos": "CM", "rating": 78},
-        {"name": "Yangel Herrera", "pos": "CM", "rating": 80}, {"name": "Ivan Martin", "pos": "CM", "rating": 80},
+        {"name": "Herrera", "pos": "CM", "rating": 80}, {"name": "Martin", "pos": "CM", "rating": 80},
         {"name": "Tsygankov", "pos": "RW", "rating": 82}, {"name": "Abel Ruiz", "pos": "ST", "rating": 76},
         {"name": "Danjuma", "pos": "LW", "rating": 78}, {"name": "Asprilla", "pos": "RW", "rating": 76}
     ]
@@ -246,7 +246,7 @@ def index():
             if len(team) >= 11:
                 avg = sum(p['rating'] for p in team) / len(team)
                 temp_m = session['my_managers'].copy()
-                temp_m[m_name] = {"name": m_name, "rating": round(avg, 1)}
+                temp_m[m_name] = {"name": m_name, "rating": round(avg, 1), "team": team}
                 session['my_managers'] = temp_m
                 session.modified = True
 
@@ -259,21 +259,37 @@ def index():
                 power = 2.5
                 r1, r2 = m1['rating']**power, m2['rating']**power
                 chance = (r1 / (r1 + r2)) * 100
-                winner = m1['name'] if random.uniform(0, 100) < chance else m2['name']
-                match_result = {"m1": m1_n, "m2": m2_n, "chance": round(chance, 1), "winner": winner}
+                
+                log = []
+                s1, s2 = 0, 0
+                minutes = sorted(random.sample(range(1, 91), 5))
+                
+                for minute in minutes:
+                    if random.uniform(0, 100) < chance:
+                        p_atk = random.choice(m1['team'])
+                        p_def = random.choice(m2['team'])
+                        if random.random() > 0.65:
+                            s1 += 1
+                            log.append(f"{minute}' — ⚽ ГОЛ! {p_atk['name']} обыгрывает {p_def['name']} и забивает! Счет {s1}:{s2}")
+                        else:
+                            log.append(f"{minute}' — {p_atk['name']} опасно пробил, но {p_def['name']} заблокировал удар.")
+                    else:
+                        p_atk = random.choice(m2['team'])
+                        p_def = random.choice(m1['team'])
+                        if random.random() > 0.65:
+                            s2 += 1
+                            log.append(f"{minute}' — ⚽ ГОЛ! {p_atk['name']} наносит точный удар! Счет {s1}:{s2}")
+                        else:
+                            log.append(f"{minute}' — Контратака! {p_atk['name']} упустил момент благодаря защите {p_def['name']}.")
 
-    all_club_names = sorted(list(DEFAULT_CLUBS.keys()) + list(session['my_clubs'].keys()))
-    
-    # Объединяем базы для просмотра составов
-    full_data = DEFAULT_CLUBS.copy()
-    for uc, data in session['my_clubs'].items():
-        full_data[uc] = data['players']
+                winner = m1_n if s1 > s2 else (m2_n if s2 > s1 else "Ничья")
+                match_result = {"m1": m1_n, "m2": m2_n, "score": f"{s1}:{s2}", "log": log, "winner": winner, "chance": round(chance, 1)}
 
-    return render_template('index.html', 
-                           clubs=all_club_names, 
-                           managers=session['my_managers'], 
-                           match_result=match_result,
-                           full_database=full_data)
+    all_names = sorted(list(DEFAULT_CLUBS.keys()) + list(session['my_clubs'].keys()))
+    full_db = DEFAULT_CLUBS.copy()
+    for uc, data in session['my_clubs'].items(): full_db[uc] = data['players']
+
+    return render_template('index.html', clubs=all_names, managers=session['my_managers'], match_result=match_result, full_database=full_db)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
