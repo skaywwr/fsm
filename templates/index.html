@@ -2,80 +2,128 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Manager & Battles</title>
+    <title>Football Empire 2026</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #334155; }
-        h2 { color: #d4af37; text-align: center; margin-top: 0; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; background: #0f172a; color: white; border: 1px solid #334155; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-create { background: #d4af37; color: black; }
-        .btn-match { background: #ef4444; color: white; margin-top: 10px; }
-        .manager-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
-        .m-badge { background: #2d3748; padding: 10px; border-radius: 8px; border-left: 4px solid #d4af37; }
-        .result-box { background: #d4af37; color: black; padding: 20px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 1.2em; }
-        .club-list { max-height: 150px; overflow-y: auto; background: #0f172a; padding: 10px; border-radius: 5px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        h2 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 8px; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        button { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        .roster-list { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid #3498db; margin-top: 10px; max-height: 300px; overflow-y: auto; }
+        .player-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .clubs-container { max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; }
+        .badge { background: #e1f5fe; color: #0288d1; padding: 3px 8px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>1. Создать Менеджера</h2>
-        <form method="POST">
-            <input type="hidden" name="action" value="create">
-            <input type="text" name="manager_name" placeholder="Никнейм игрока" required>
-            <p>Выберите клубы:</p>
-            <div class="club-list">
-                {% for club in clubs %}
-                    <label><input type="checkbox" name="clubs" value="{{ club }}"> {{ club }}</label><br>
-                {% endfor %}
-            </div>
-            <button type="submit" class="btn-create">Сохранить Player-а</button>
-        </form>
-    </div>
+<div class="container">
+    <h1>🏆 Football Empire 2026</h1>
 
-    {% if managers %}
-    <div class="card">
-        <h2>Зарегистрированные Менеджеры</h2>
-        <div class="manager-list">
-            {% for m in managers.values() %}
-                <div class="m-badge">
-                    <strong>{{ m.name }}</strong><br>
-                    Рейтинг: {{ m.rating }}
-                </div>
-            {% endfor %}
+    <div class="grid">
+        <div class="card">
+            <h2>🛠 Свой Клуб / Игрок</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="add_custom">
+                <input type="text" name="club_name" placeholder="Название клуба" required>
+                <input type="text" name="p_name" placeholder="Имя игрока" required>
+                <select name="p_pos">
+                    <option value="GK">Вратарь (GK)</option>
+                    <option value="CB">Защитник (CB)</option>
+                    <option value="LB">Лев. Защ (LB)</option>
+                    <option value="RB">Прав. Защ (RB)</option>
+                    <option value="CM">Центр. Полузащ (CM)</option>
+                    <option value="ST">Нападающий (ST)</option>
+                    <option value="LW">Лев. Вингер (LW)</option>
+                    <option value="RW">Прав. Вингер (RW)</option>
+                </select>
+                <input type="number" name="p_rating" value="80" min="1" max="99">
+                <button type="submit">Добавить в Базу</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📖 Просмотр Составов</h2>
+            <select id="db_selector" onchange="showRoster()">
+                <option value="">-- Выберите клуб --</option>
+                {% for c_name in clubs %}
+                <option value="{{ c_name }}">{{ c_name }}</option>
+                {% endfor %}
+            </select>
+            <div id="roster_display" class="roster-list">
+                Выберите команду, чтобы увидеть игроков...
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <h2>2. Провести Матч</h2>
-        <form method="POST">
-            <input type="hidden" name="action" value="match">
-            <select name="manager1" required>
-                <option value="" disabled selected>Выбрать 1-го игрока</option>
-                {% for m in managers.values() %}
-                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
-                {% endfor %}
-            </select>
-            <div style="text-align: center; font-weight: bold;">VS</div>
-            <select name="manager2" required>
-                <option value="" disabled selected>Выбрать 2-го игрока</option>
-                {% for m in managers.values() %}
-                    <option value="{{ m.name }}">{{ m.name }} ({{ m.rating }})</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn-match">🔥 Начать симуляцию</button>
-        </form>
-    </div>
-    {% endif %}
+    <div class="grid">
+        <div class="card">
+            <h2>👨‍💼 Создать Менеджера</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="create">
+                <input type="text" name="manager_name" placeholder="Имя менеджера" required>
+                <p><small>Выберите клубы (минимум 11 игроков в сумме):</small></p>
+                <div class="clubs-container">
+                    {% for c_name in clubs %}
+                    <label style="display: block;"><input type="checkbox" name="clubs" value="{{ c_name }}"> {{ c_name }}</label>
+                    {% endfor %}
+                </div>
+                <button type="submit" style="margin-top: 10px; background: #27ae60;">Собрать Состав</button>
+            </form>
+        </div>
 
-    {% if match_result %}
-    <div class="result-box">
-        Матч: {{ match_result.m1 }} vs {{ match_result.m2 }}<br>
-        Шанс {{ match_result.m1 }}: {{ match_result.chance }}%<br><br>
-        🏆 ПОБЕДИТЕЛЬ: {{ match_result.winner }}
+        <div class="card">
+            <h2>⚽ Провести Матч</h2>
+            {% if managers|length >= 2 %}
+            <form method="POST">
+                <input type="hidden" name="action" value="match">
+                <select name="m1">
+                    {% for m in managers %}<option value="{{ m }}">{{ m }} (⭐{{ managers[m].rating }})</option>{% endfor %}
+                </select>
+                <select name="m2">
+                    {% for m in managers %}<option value="{{ m }}">{{ m }} (⭐{{ managers[m].rating }})</option>{% endfor %}
+                </select>
+                <button type="submit" style="background: #e67e22;">ИГРАТЬ</button>
+            </form>
+            {% if match_result %}
+            <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 10px; text-align: center;">
+                Победитель: <strong style="font-size: 1.2em;">{{ match_result.winner }}</strong>! 🏆<br>
+                Шанс на победу был: {{ match_result.chance }}%
+            </div>
+            {% endif %}
+            {% else %}
+            <p>Создайте 2-х менеджеров для игры.</p>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
+</div>
+
+<script>
+    // Передаем данные из Flask в JS
+    const database = {{ full_database | tojson }};
+
+    function showRoster() {
+        const clubName = document.getElementById('db_selector').value;
+        const display = document.getElementById('roster_display');
+        
+        if (!clubName || !database[clubName]) {
+            display.innerHTML = "Выберите команду...";
+            return;
+        }
+
+        let html = `<strong>Состав ${clubName}:</strong><br><br>`;
+        database[clubName].forEach(p => {
+            html += `<div class="player-row">
+                        <span>${p.name} <small>(${p.pos})</small></span>
+                        <span class="badge">${p.rating}</span>
+                     </div>`;
+        });
+        display.innerHTML = html;
+    }
+</script>
 
 </body>
 </html>
